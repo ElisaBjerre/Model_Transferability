@@ -3,57 +3,41 @@
 Created on Wed Apr  8 15:41:08 2020
 
 This script reads the covariates from the dataframe and computes histograms
-and histogram distances for all covariates in a comparison between random and 
-spatial hold-out data sets. 
+and histogram distances for all covariates in a comparison between the six
+hold-out data sets: random and 5 spatial subsets. 
 
 The outputs are histogram plots and dataframes with distances measures, 
 which can be read by hist_metrics_performance.py. 
 
-@author: Elisa Bjerre (elisabjerre@gmail.com)
+@author: ebj
 """
 #%%
 import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import r2_score
-from sklearn.metrics import mean_squared_error
-from math import sqrt
 import matplotlib.pyplot as plt
 import os
 import pandas as pd
-from datetime import date
-import define_spatial_subsets_v3 as defsub
-import plotting_ML_v2 as p
+import define_spatial_subsets as defsub
 from scipy.spatial import distance as dist
 import sys
 from math import ceil
 
 #%% load paths
 dir_path = os.path.dirname(os.path.realpath(__file__)) #Directory of the module
-modelfolder = os.path.dirname(dir_path)                # mike she model folder
-parentfolder=os.path.dirname(os.path.dirname(modelfolder)) # parent folder 
-
-dateprint = date.today().strftime("%b-%d-%Y")
-
-outfolder = dir_path+"/ML_output_files/"
-directory = os.path.dirname(outfolder)
-if not os.path.exists(directory):
-    os.makedirs(directory)
     
 #make folder for saving outputs 
-resultfolder = dir_path+"/ML_output_files/Histogram_distances_subbasins_v3/"
+resultfolder = dir_path+"/Histogram_distances/"
 directory = os.path.dirname(resultfolder)
 if not os.path.exists(directory):
     os.makedirs(directory)
 
 #%%-------------Load and prepare dataframe for ML algorithms-------------------
 #Load dataframe
-dataframe = pd.read_csv(outfolder+'dataframe_Storaa_100m_DKM18_invA_May-06-2021')
+dataframe = pd.read_csv('dataframe_Storaa')
 
 #Target variable
 y = dataframe[['dfrac']]
 
 #Dataframe 
-# X=dataframe.drop(['dfrac'], axis=1)
 X=dataframe 
 '''In this specific case, we do not delete dfrac from X
 as we wish to compute histograms and distances for this parameter together
@@ -63,21 +47,17 @@ del dataframe
 
 #Only mappable parameters are relevant for transferability, remove non-mappable
 #exclude categorical variables for a start 
-#excluded covariates: flow accumulation
 headers=X.columns.to_series()
-X = X.drop(headers[headers.str.contains('flow accumulation|T lay|Kx lay|Kz lay|Kz_eff|Sand ratio|Root depth|soil type|land use|soil class')], axis=1)
+X = X.drop(headers[headers.str.contains('T lay|Kx lay|Kz lay|Kz_eff|Sand ratio|soil type|land use|soil class')], axis=1)
 
 #%%-----------Split dataset into training and validation sets------------------
 hold_out=0.20 #20% hold out for testing
 
 #Hydrological sub-basins
-X_train, X_test, _, _, _, _ = defsub.spatial_subbasins(X,y, hold_out)
+X_train, X_test, _, _, _, _ = defsub.spatial_subbasins_9(X,y, hold_out)
 
 del X
 del y
-
-del X_train['sub-basin 4']
-del X_test['sub-basin 4']
 
 #%%----------------------Functions---------------------------------------------
 def return_intersection(hist_1, hist_2):
@@ -127,7 +107,7 @@ def findMinDiffPairs(x1,x2):
     mindifpairs=np.sum(min_pairs) #sum of the minimum difference of pairs. 
     return mindifpairs
 
-def subplot_hist_feat3(xtest, xtrain, con, density, stdzn):
+def subplot_hist_feat(xtest, xtrain, con, density, stdzn):
     '''Creates figure for each feature with subplots of train-test histograms for all subsets
     input: dictionaries of train and test data for all subsets for a single feature
     saves distance mesures to dataframes. 
@@ -145,7 +125,6 @@ def subplot_hist_feat3(xtest, xtrain, con, density, stdzn):
     d_mindifpair={} #Minimum difference of pair assignments
     d_eucl={} #Euclidian distance
     d_city={} #City block
-    d_cheb={} #chebyshev
     
     if con==True: #continuous variables (remove categorical variables)
         headers=xtest[list(xtest.keys())[0]].keys() 
@@ -182,7 +161,6 @@ def subplot_hist_feat3(xtest, xtrain, con, density, stdzn):
         temp_mindifpair={} #Minimum difference of pair assignments
         temp_eucl={} #Euclidian distance
         temp_city={} #City block
-        temp_cheb={} #chebyshev
         
         for ax, sub in zip(axes.flatten(), xtrain.keys()): #loop over subsets 
             #remove -999 (nan values) from data
@@ -215,21 +193,18 @@ def subplot_hist_feat3(xtest, xtrain, con, density, stdzn):
             med2=np.median(x2)
             eucl=dist.euclidean(a,b)
             city=dist.cityblock(a,b)
-            cheb=dist.chebyshev(a,b)
             
             #save to temporary lists
             temp_intsec[sub]=intsec
             temp_mindifpair[sub]=mindifpair
             temp_eucl[sub]=eucl
             temp_city[sub]=city
-            temp_cheb[sub]=cheb
             
             #plot settings 
             ax.text(0.7, 0.9, r'Intersection={:.2f}'.format(intsec), horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
             ax.text(0.7, 0.8, r'Min_dif_pair={:.2f}'.format(mindifpair), horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
             ax.text(0.7, 0.7, r'd_eucl={:.2f}'.format(eucl), horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
             ax.text(0.7, 0.6, r'd_city={:.2f}'.format(city), horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
-            # ax.text(0.7, 0.5, r'd_cheb={:.2f}'.format(cheb), horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
             ax.axvline(mean1, color=clr1, linestyle='dashed', linewidth=2, label=label1+' mean')
             ax.axvline(mean2, color=clr2, linestyle='dashed', linewidth=2, label=label2+' mean')
             ax.axvline(med1, color=clr1, linestyle='dotted', linewidth=2, label=label1+' median')
@@ -254,7 +229,6 @@ def subplot_hist_feat3(xtest, xtrain, con, density, stdzn):
         d_mindifpair[feat]=temp_mindifpair
         d_eucl[feat]=temp_eucl
         d_city[feat]=temp_city
-        d_cheb[feat]=temp_cheb
     
     #save as dataframes to csv files     
     df_intsec = pd.DataFrame(data=d_intsec)
@@ -263,19 +237,13 @@ def subplot_hist_feat3(xtest, xtrain, con, density, stdzn):
     df_eucl.to_csv(resultfolder+'df_Dist_Euclidian'+n1+n2, index=True)
     df_city = pd.DataFrame(data=d_city)
     df_city.to_csv(resultfolder+'df_Dist_Cityblock'+n1+n2, index=True)
-    df_cheb = pd.DataFrame(data=d_cheb)
-    df_cheb.to_csv(resultfolder+'df_Dist_Chebyshev'+n1+n2, index=True)
     df_mindifpair = pd.DataFrame(data=d_mindifpair)
     df_mindifpair.to_csv(resultfolder+'df_Dist_MinDiffPair'+n1+n2, index=True)
         
-    return df_intsec, df_eucl, df_city, df_cheb, df_mindifpair
+    return df_intsec, df_eucl, df_city, df_mindifpair
 
 #%% compute histograms and distances
     
 #histograms normalized to A=1 and standardized 
-subplot_hist_feat3(xtest=X_test, xtrain=X_train, con=True, density=True, stdzn=True) 
+subplot_hist_feat(xtest=X_test, xtrain=X_train, con=True, density=True, stdzn=True) 
 
-# subplot_hist_feat3(xtest=X_test, xtrain=X_train, con=True, density=True, stdzn=False) 
-
-# del X_test
-# del X_train
