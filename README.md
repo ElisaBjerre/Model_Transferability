@@ -13,10 +13,10 @@ Plots histograms and computes histogram distance metrics for all training and te
 
 **train_RFmodels.py:** Trains Random Forest models, makes predictions on hold-out datasets, evaluates model performance (R2). Computes individual covariate importances used for weighting in the transferability assessment. 
 
-**transferability_assessment.py:** For each distance metric, the script plots and evaluates the linear correlation between weighted distance and model performana
+**transferability_assessment.py:** For each distance metric, the script plots and evaluates the linear correlation between weighted distance and model performance. 
 
-**mask_lu_s.npy:** mask of the Storaa catchment, where roads, urban areas etc are removed.
+**mask_lu_s.npy:** Mask of the Storaa catchment, where roads, urban areas etc. are removed.
 
-**Storaa_subbasins_10.tif:** tif file of sub-basins generated in Q.GIS
+**Storaa_subbasins_10.tif:** Sub-basins generated in Q.GIS.
 
-Bjerre, E., Fienen, M. N., Schneider, R., Koch, J., & Anker, L. H. (2022). Assessing spatial transferability of a random forest metamodel for predicting drainage fraction, 612, 128177. https://doi.org/10.1016/j.jhydrol.2022.128177
+Cite as: Bjerre, E., Fienen, M. N., Schneider, R., Koch, J., & Anker, L. H. (2022). Assessing spatial transferability of a random forest metamodel for predicting drainage fraction, 612, 128177. https://doi.org/10.1016/j.jhydrol.2022.128177
