@@ -19,4 +19,5 @@ Plots histograms and computes histogram distance metrics for all training and te
 
 **Storaa_subbasins_10.tif:** Sub-basins generated in Q.GIS.
 
-Cite as: Bjerre, E., Fienen, M. N., Schneider, R., Koch, J., & Anker, L. H. (2022). Assessing spatial transferability of a random forest metamodel for predicting drainage fraction, 612, 128177. https://doi.org/10.1016/j.jhydrol.2022.128177
+Cite as: 
+Bjerre, E., Fienen, M. N., Schneider, R., Koch, J., & Anker, L. H. (2022). Assessing spatial transferability of a random forest metamodel for predicting drainage fraction, 612, 128177. https://doi.org/10.1016/j.jhydrol.2022.128177
